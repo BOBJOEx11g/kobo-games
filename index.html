@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kobo Snake</title>
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #000000;
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 10px;
+    }
+    h2 {
+      margin: 5px 0;
+    }
+    #score {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    canvas {
+      border: 3px solid #000000;
+      background-color: #f0f0f0;
+      display: block;
+      margin: 0 auto;
+    }
+    /* Simple Table Layout for D-Pad */
+    .dpad-table {
+      margin: 15px auto 0 auto;
+      border-collapse: collapse;
+    }
+    .dpad-table td {
+      width: 60px;
+      height: 60px;
+      padding: 2px;
+    }
+    .btn {
+      width: 100%;
+      height: 100%;
+      font-size: 22px;
+      font-weight: bold;
+      background-color: #dddddd;
+      color: #000000;
+      border: 2px solid #000000;
+    }
+    .btn:active {
+      background-color: #000000;
+      color: #ffffff;
+    }
+    .reset-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #cc0000;
+      color: #ffffff;
+      border: 2px solid #000000;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Kobo Snake</h2>
+  <div id="score">Score: 0</div>
+  
+  <canvas id="gc" width="280" height="280"></canvas>
+
+  <table class="dpad-table">
+    <tr>
+      <td></td>
+      <td><button class="btn" onclick="step('UP')">▲</button></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><button class="btn" onclick="step('LEFT')">◄</button></td>
+      <td></td>
+      <td><button class="btn" onclick="step('RIGHT')">►</button></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><button class="btn" onclick="step('DOWN')">▼</button></td>
+      <td></td>
+    </tr>
+  </table>
+
+  <div>
+    <button class="reset-btn" onclick="resetGame()">Restart Game</button>
+  </div>
+
+  <script>
+    var cvs = document.getElementById('gc');
+    var ctx = cvs.getContext('2d');
+    var scoreTxt = document.getElementById('score');
+
+    var gSize = 14; 
+    var tSize = 20; // 14 x 20 = 280px canvas width/height
+
+    var snake = [{x: 7, y: 7}];
+    var food = {x: 3, y: 3, color: '#cc0000'};
+    var score = 0;
+    var gameOver = false;
+
+    function draw() {
+      // Clear Background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+      // Draw Food
+      ctx.fillStyle = food.color;
+      ctx.fillRect(food.x * tSize, food.y * tSize, tSize, tSize);
+
+      // Draw Snake
+      for (var i = 0; i < snake.length; i++) {
+        ctx.fillStyle = (i === 0) ? '#0033aa' : '#0077cc';
+        ctx.fillRect(snake[i].x * tSize, snake[i].y * tSize, tSize - 1, tSize - 1);
+      }
+
+      if (gameOver) {
+        ctx.fillStyle = '#000000';
+        ctx.font = '20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over!', cvs.width / 2, cvs.height / 2);
+      }
+    }
+
+    function step(dir) {
+      if (gameOver) return;
+
+      var head = {x: snake[0].x, y: snake[0].y};
+
+      if (dir === 'UP') head.y -= 1;
+      if (dir === 'DOWN') head.y += 1;
+      if (dir === 'LEFT') head.x -= 1;
+      if (dir === 'RIGHT') head.x += 1;
+
+      // Wall Collision
+      if (head.x < 0 || head.x >= gSize || head.y < 0 || head.y >= gSize) {
+        gameOver = true;
+        draw();
+        return;
+      }
+
+      // Self Collision
+      for (var i = 0; i < snake.length; i++) {
+        if (snake[i].x === head.x && snake[i].y === head.y) {
+          gameOver = true;
+          draw();
+          return;
+        }
+      }
+
+      snake.unshift(head);
+
+      // Food Collision
+      if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        scoreTxt.innerHTML = 'Score: ' + score;
+        spawnFood();
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function spawnFood() {
+      var colors = ['#cc0000', '#ff8800', '#009900', '#8800cc'];
+      food.x = Math.floor(Math.random() * gSize);
+      food.y = Math.floor(Math.random() * gSize);
+      food.color = colors[Math.floor(Math.random() * colors.length)];
+
+      for (var i = 0; i < snake.length; i++) {
+        if (snake[i].x === food.x && snake[i].y === food.y) {
+          spawnFood();
+          break;
+        }
+      }
+    }
+
+    function resetGame() {
+      snake = [{x: 7, y: 7}];
+      score = 0;
+      gameOver = false;
+      scoreTxt.innerHTML = 'Score: 0';
+      spawnFood();
+      draw();
+    }
+
+    draw();
+  </script>
+</body>
+</html>
